@@ -176,6 +176,11 @@ def handle_comment_info(data):
         'pictures': pictures,
     }
 def save_to_xlsx(datas, file_path, type='note'):
+    # Ensure directory exists
+    dir_path = os.path.dirname(file_path)
+    if dir_path and not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     if type == 'note':
