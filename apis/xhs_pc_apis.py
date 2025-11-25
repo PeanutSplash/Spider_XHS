@@ -185,10 +185,23 @@ class XHS_Apis():
             headers, cookies, data = generate_request_params(cookies_str, splice_api)
             response = requests.get(self.base_url + splice_api, headers=headers, cookies=cookies, proxies=proxies)
             res_json = response.json()
-            success, msg = res_json["success"], res_json["msg"]
+
+            # Debug: Log complete API response
+            import json
+            logger.debug(f"API Response for get_user_note_info: {json.dumps(res_json, ensure_ascii=False)}")
+
+            success = res_json.get("success", False)
+            msg = res_json.get("msg", "")
+
+            # If API returned error code, construct error message
+            if not success:
+                code = res_json.get("code", "unknown")
+                if not msg:
+                    msg = f"API返回错误: code={code}"
         except Exception as e:
             success = False
             msg = str(e)
+            logger.error(f"Error in get_user_note_info: {str(e)}")
         return success, msg, res_json
 
 
@@ -513,10 +526,23 @@ class XHS_Apis():
             headers, cookies, data = generate_request_params(cookies_str, api, data)
             response = requests.post(self.base_url + api, headers=headers, data=data.encode('utf-8'), cookies=cookies, proxies=proxies)
             res_json = response.json()
-            success, msg = res_json["success"], res_json["msg"]
+
+            # Debug: Log complete API response
+            import json
+            logger.debug(f"API Response for search_note: {json.dumps(res_json, ensure_ascii=False)}")
+
+            success = res_json.get("success", False)
+            msg = res_json.get("msg", "")
+
+            # If API returned error code, construct error message
+            if not success:
+                code = res_json.get("code", "unknown")
+                if not msg:
+                    msg = f"API返回错误: code={code}"
         except Exception as e:
             success = False
             msg = str(e)
+            logger.error(f"Error in search_note: {str(e)}")
         return success, msg, res_json
 
     def search_some_note(self, query: str, require_num: int, cookies_str: str, sort_type_choice=0, note_type=0, note_time=0, note_range=0, pos_distance=0, geo="", proxies: dict = None):

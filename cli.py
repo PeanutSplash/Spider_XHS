@@ -44,7 +44,7 @@ def validate_cookie():
 
         # 配置loguru
         logger.remove()
-        logger.add(log_handler, format="{message}")
+        logger.add(log_handler, format="{message}", level="DEBUG")
 
         # 初始化
         init()
@@ -53,7 +53,15 @@ def validate_cookie():
         spider = Data_Spider()
         success, msg, res_json = spider.xhs_apis.search_note("test", cookie, page=1)
 
-        if success:
+        # Check if message contains account anomaly keywords or error codes
+        msg_str = str(msg) if msg else ""
+        has_account_anomaly = (
+            "账号异常" in msg_str or
+            "检测到账号异常" in msg_str or
+            "code=-1" in msg_str
+        )
+
+        if success and not has_account_anomaly:
             output_json({
                 "type": "validation_result",
                 "valid": True,
@@ -61,10 +69,15 @@ def validate_cookie():
                 "userInfo": None
             })
         else:
+            # If success but has account anomaly, or if not success
+            error_msg = msg_str if msg_str and msg_str != "'msg'" else "Cookie无效或已过期"
+            if has_account_anomaly:
+                error_msg = "检测到账号异常，Cookie已失效"
+
             output_json({
                 "type": "validation_result",
                 "valid": False,
-                "message": msg if msg and msg != "'msg'" else "Cookie无效或已过期",
+                "message": error_msg,
                 "userInfo": None
             })
 
@@ -94,7 +107,7 @@ def main():
 
         # 配置loguru输出到自定义handler
         logger.remove()  # 移除默认handler
-        logger.add(log_handler, format="{message}")
+        logger.add(log_handler, format="{message}", level="DEBUG")
 
         # 初始化
         init()
@@ -160,7 +173,7 @@ def main():
                 "message": f"开始爬取用户: {user_url}"
             })
 
-            note_list, success, msg = spider.spider_user_all_note(
+            note_list, api_success, api_msg = spider.spider_user_all_note(
                 user_url=user_url,
                 cookies_str=cookie,
                 base_path=paths,
@@ -174,6 +187,16 @@ def main():
                 "current": len(note_list),
                 "total": len(note_list),
                 "message": f"用户共有 {len(note_list)} 条笔记"
+            })
+
+            # 输出完成信号，包含count和API返回的消息
+            output_json({
+                "type": "done",
+                "success": True,
+                "count": len(note_list),
+                "api_success": api_success,
+                "api_message": api_msg,
+                "message": "任务完成"
             })
 
         elif task_type == 'search':
@@ -195,7 +218,7 @@ def main():
                 "message": f"搜索关键词: {query}, 数量: {require_num}"
             })
 
-            spider.spider_some_search_note(
+            note_list, api_success, api_msg = spider.spider_some_search_note(
                 query=query,
                 require_num=require_num,
                 cookies_str=cookie,
@@ -211,6 +234,16 @@ def main():
                 proxies=proxies
             )
 
+            # 输出完成信号，包含count和API返回的消息
+            output_json({
+                "type": "done",
+                "success": True,
+                "count": len(note_list),
+                "api_success": api_success,
+                "api_message": api_msg,
+                "message": "任务完成"
+            })
+
         else:
             output_json({
                 "type": "error",
@@ -219,12 +252,14 @@ def main():
             })
             sys.exit(1)
 
-        # 输出完成信号
-        output_json({
-            "type": "done",
-            "success": True,
-            "message": "任务完成"
-        })
+        # 注意: search和user任务已经在上面输出了done消息，这里不再输出
+        if task_type not in ['search', 'user']:
+            # 输出完成信号
+            output_json({
+                "type": "done",
+                "success": True,
+                "message": "任务完成"
+            })
 
     except Exception as e:
         output_json({
