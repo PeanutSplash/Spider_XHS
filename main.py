@@ -62,8 +62,12 @@ class Data_Spider():
         :return:
         """
         note_list = []
+        api_success = True
+        api_msg = ''
         try:
             success, msg, all_note_info = self.xhs_apis.get_user_all_notes(user_url, cookies_str, proxies)
+            api_success = success
+            api_msg = msg
             if success:
                 logger.info(f'用户 {user_url} 作品数量: {len(all_note_info)}')
                 for simple_note_info in all_note_info:
@@ -76,7 +80,7 @@ class Data_Spider():
             success = False
             msg = e
         logger.info(f'爬取用户所有视频 {user_url}: {success}, msg: {msg}')
-        return note_list, success, msg
+        return note_list, api_success, api_msg
 
     def spider_some_search_note(self, query: str, require_num: int, cookies_str: str, base_path: dict, save_choice: str, sort_type_choice=0, note_type=0, note_time=0, note_range=0, pos_distance=0, geo: dict = None,  excel_name: str = '', proxies=None):
         """
@@ -93,8 +97,12 @@ class Data_Spider():
             返回搜索的结果
         """
         note_list = []
+        api_success = True
+        api_msg = ''
         try:
             success, msg, notes = self.xhs_apis.search_some_note(query, require_num, cookies_str, sort_type_choice, note_type, note_time, note_range, pos_distance, geo, proxies)
+            api_success = success
+            api_msg = msg
             if success:
                 notes = list(filter(lambda x: x['model_type'] == "note", notes))
                 logger.info(f'搜索关键词 {query} 笔记数量: {len(notes)}')
@@ -108,7 +116,7 @@ class Data_Spider():
             success = False
             msg = e
         logger.info(f'搜索关键词 {query} 笔记: {success}, msg: {msg}')
-        return note_list, success, msg
+        return note_list, api_success, api_msg
 
 if __name__ == '__main__':
     """
