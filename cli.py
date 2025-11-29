@@ -5,11 +5,31 @@ CLI Entry Point for Spider XHS
 """
 import sys
 import json
+import random
 from typing import Dict, Any
 from loguru import logger
 from main import Data_Spider
 from apis.xhs_pc_apis import XHS_Apis
 from xhs_utils.common_util import init
+
+# Cookie校验用的真实搜索关键词池(小红书常见热门搜索词)
+VALIDATION_KEYWORDS = [
+    "美食",
+    "穿搭",
+    "美妆",
+    "旅行",
+    "健身",
+    "护肤",
+    "摄影",
+    "减肥",
+    "家居",
+    "宠物",
+    "发型",
+    "好物分享",
+    "日常vlog",
+    "读书",
+    "手工",
+]
 
 
 def output_json(data: Dict[str, Any]):
@@ -50,8 +70,10 @@ def validate_cookie():
         init()
 
         # 使用搜索API验证cookie有效性（搜索1个结果即可）
+        # 随机选择一个真实搜索关键词,避免被检测为机器行为
+        validation_keyword = random.choice(VALIDATION_KEYWORDS)
         spider = Data_Spider()
-        success, msg, res_json = spider.xhs_apis.search_note("test", cookie, page=1)
+        success, msg, res_json = spider.xhs_apis.search_note(validation_keyword, cookie, page=1)
 
         # Check if message contains account anomaly keywords or error codes
         msg_str = str(msg) if msg else ""
