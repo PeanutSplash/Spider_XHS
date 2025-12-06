@@ -26,7 +26,7 @@ class Data_Spider():
                 note_info = handle_note_info(note_info)
         except Exception as e:
             success = False
-            msg = e
+            msg = str(e)
         logger.info(f'爬取笔记信息 {note_url}: {success}, msg: {msg}')
         return success, msg, note_info
 
@@ -78,7 +78,7 @@ class Data_Spider():
             self.spider_some_note(note_list, cookies_str, base_path, save_choice, excel_name, proxies)
         except Exception as e:
             success = False
-            msg = e
+            msg = str(e)
         logger.info(f'爬取用户所有视频 {user_url}: {success}, msg: {msg}')
         return note_list, api_success, api_msg
 
@@ -114,7 +114,7 @@ class Data_Spider():
             self.spider_some_note(note_list, cookies_str, base_path, save_choice, excel_name, proxies)
         except Exception as e:
             success = False
-            msg = e
+            msg = str(e)
         logger.info(f'搜索关键词 {query} 笔记: {success}, msg: {msg}')
         return note_list, api_success, api_msg
 
