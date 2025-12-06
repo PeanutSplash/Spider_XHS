@@ -40,12 +40,25 @@ def output_json(data: Dict[str, Any]):
 
 def log_handler(message):
     """自定义日志处理器,将日志输出为JSON格式"""
-    record = message.record
-    output_json({
-        "type": "log",
-        "level": record["level"].name,
-        "message": record["message"]
-    })
+    try:
+        record = message.record
+        # 确保 message 是可序列化的字符串
+        msg_text = str(record["message"]) if record["message"] else ""
+        output_json({
+            "type": "log",
+            "level": record["level"].name,
+            "message": msg_text
+        })
+    except Exception as e:
+        # 如果序列化失败，输出简化的错误信息
+        try:
+            output_json({
+                "type": "log",
+                "level": "ERROR",
+                "message": f"Log serialization error: {str(e)}"
+            })
+        except:
+            pass  # 最后的防护，避免死循环
 
 
 def validate_cookie():
