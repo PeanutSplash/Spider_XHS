@@ -187,7 +187,7 @@ def main():
                 "message": f"准备爬取 {len(notes)} 条笔记"
             })
 
-            spider.spider_some_note(
+            note_list = spider.spider_some_note(
                 notes=notes,
                 cookies_str=cookie,
                 base_path=paths,
@@ -195,6 +195,14 @@ def main():
                 excel_name=excel_name,
                 proxies=proxies
             )
+
+            # 输出完成信号，包含count
+            output_json({
+                "type": "done",
+                "success": True,
+                "count": len(note_list),
+                "message": "任务完成"
+            })
 
         elif task_type == 'user':
             # 爬取用户所有笔记
@@ -287,14 +295,7 @@ def main():
             })
             sys.exit(1)
 
-        # 注意: search和user任务已经在上面输出了done消息，这里不再输出
-        if task_type not in ['search', 'user']:
-            # 输出完成信号
-            output_json({
-                "type": "done",
-                "success": True,
-                "message": "任务完成"
-            })
+        # 注意: notes、search和user任务已经在上面各自输出了done消息
 
     except Exception as e:
         output_json({
