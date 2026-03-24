@@ -1,8 +1,18 @@
 import json
 import math
+import os
 import random
 import execjs
 from xhs_utils.cookie_util import trans_cookies
+
+# Override execjs Node runtime to use our bundled Electron-as-Node binary
+# instead of whatever node is on PATH (nvm/volta/system Node may be wrong version).
+# We set _binary_cache directly because execjs's _find_executable() only does
+# PATH-based lookup and does not support absolute paths.
+_node_binary = os.environ.get('NODE_BINARY')
+if _node_binary and os.path.isfile(_node_binary):
+    _node_runtime = execjs.get('Node')
+    _node_runtime._binary_cache = [_node_binary]
 
 try:
     js = execjs.compile(open(r'../static/xhs_xs_xsc_56.js', 'r', encoding='utf-8').read())

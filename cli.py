@@ -96,6 +96,11 @@ def validate_cookie():
             "code=-1" in msg_str
         )
 
+        # Detect execjs / signing engine errors (e.g. "(1, '', None)")
+        is_signing_error = (
+            msg_str.startswith("(") and msg_str.endswith(")") and "," in msg_str
+        ) or "execjs" in msg_str.lower() or "ExternalRuntime" in msg_str
+
         if success and not has_account_anomaly:
             output_json({
                 "type": "validation_result",
@@ -105,9 +110,14 @@ def validate_cookie():
             })
         else:
             # If success but has account anomaly, or if not success
-            error_msg = msg_str if msg_str and msg_str != "'msg'" else "Cookie无效或已过期"
             if has_account_anomaly:
                 error_msg = "检测到账号异常，Cookie已失效"
+            elif is_signing_error:
+                error_msg = "签名引擎执行失败，请确保系统已安装 Node.js（https://nodejs.org）并重启应用"
+            elif msg_str and msg_str != "'msg'":
+                error_msg = msg_str
+            else:
+                error_msg = "Cookie无效或已过期"
 
             output_json({
                 "type": "validation_result",
