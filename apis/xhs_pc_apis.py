@@ -4,6 +4,7 @@ import re
 import urllib
 import requests
 from xhs_utils.xhs_util import splice_str, generate_request_params, generate_x_b3_traceid, get_common_headers
+from xhs_utils.common_util import poisson_sleep
 from loguru import logger
 
 """
@@ -95,6 +96,7 @@ class XHS_Apis():
                 note_index += 20
                 if len(note_list) > require_num:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -233,6 +235,7 @@ class XHS_Apis():
                 note_list.extend(notes)
                 if len(notes) == 0 or not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -296,6 +299,7 @@ class XHS_Apis():
                 note_list.extend(notes)
                 if len(notes) == 0 or not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -359,6 +363,7 @@ class XHS_Apis():
                 note_list.extend(notes)
                 if len(notes) == 0 or not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -573,6 +578,7 @@ class XHS_Apis():
                 page += 1
                 if len(note_list) >= require_num or not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -632,6 +638,7 @@ class XHS_Apis():
                 page += 1
                 if len(user_list) >= require_num or not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -689,6 +696,7 @@ class XHS_Apis():
                 note_out_comment_list.extend(comments)
                 if len(note_out_comment_list) == 0 or not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -748,6 +756,7 @@ class XHS_Apis():
                 inner_comment_list.extend(comments)
                 if not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
             comment['sub_comments'].extend(inner_comment_list)
         except Exception as e:
             success = False
@@ -842,6 +851,7 @@ class XHS_Apis():
                 metions_list.extend(metions)
                 if not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -892,6 +902,7 @@ class XHS_Apis():
                 likesAndcollects_list.extend(likesAndcollects)
                 if not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)
@@ -942,6 +953,7 @@ class XHS_Apis():
                 connections_list.extend(connections)
                 if not res_json["data"]["has_more"]:
                     break
+                poisson_sleep()
         except Exception as e:
             success = False
             msg = str(e)

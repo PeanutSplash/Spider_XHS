@@ -2,7 +2,7 @@ import json
 import os
 from loguru import logger
 from apis.xhs_pc_apis import XHS_Apis
-from xhs_utils.common_util import init
+from xhs_utils.common_util import init, poisson_sleep
 from xhs_utils.data_util import handle_note_info, download_note, save_to_xlsx
 
 
@@ -41,7 +41,9 @@ class Data_Spider():
         if (save_choice == 'all' or save_choice == 'excel') and excel_name == '':
             raise ValueError('excel_name 不能为空')
         note_list = []
-        for note_url in notes:
+        for index, note_url in enumerate(notes):
+            if index > 0:
+                poisson_sleep()
             success, msg, note_info = self.spider_note(note_url, cookies_str, proxies)
             if note_info is not None and success:
                 note_list.append(note_info)
