@@ -8,8 +8,8 @@ import json
 import random
 from typing import Dict, Any
 from loguru import logger
-from main import Data_Spider
-from apis.xhs_pc_apis import XHS_Apis
+from spider.spider import Data_Spider
+from xhs_utils.xhs_pc import XHSPcAuth
 from xhs_utils.common_util import init
 
 # Cookie校验用的真实搜索关键词池(小红书常见热门搜索词)
@@ -57,8 +57,18 @@ def log_handler(message):
                 "level": "ERROR",
                 "message": f"Log serialization error: {str(e)}"
             })
-        except:
+        except Exception:
             pass  # 最后的防护，避免死循环
+
+
+def create_spider(cookie: str, proxies=None) -> Data_Spider:
+    """使用完整 Cookie 创建已 bootstrap 的 Data_Spider。"""
+    if not cookie or not str(cookie).strip():
+        raise ValueError('Missing required cookie')
+    auth = XHSPcAuth.from_cookie(cookie)
+    spider = Data_Spider(auth)
+    spider.xhs_apis.bootstrap(proxies)
+    return spider
 
 
 def validate_cookie():
@@ -85,8 +95,8 @@ def validate_cookie():
         # 使用搜索API验证cookie有效性（搜索1个结果即可）
         # 随机选择一个真实搜索关键词,避免被检测为机器行为
         validation_keyword = random.choice(VALIDATION_KEYWORDS)
-        spider = Data_Spider()
-        success, msg, res_json = spider.xhs_apis.search_note(validation_keyword, cookie, page=1)
+        spider = create_spider(cookie)
+        success, msg, res_json = spider.xhs_apis.search_note(validation_keyword, page=1)
 
         # Check if message contains account anomaly keywords or error codes
         msg_str = str(msg) if msg else ""
@@ -170,8 +180,8 @@ def main():
             "message": f"开始执行任务: {task_type}"
         })
 
-        # 创建Spider实例
-        spider = Data_Spider()
+        # 创建Spider实例（上游新版通过 XHSPcAuth 持有 Cookie / 签名状态）
+        spider = create_spider(cookie, proxies)
 
         # 根据taskType执行不同任务
         if task_type == 'notes':
@@ -189,12 +199,11 @@ def main():
 
             note_list = spider.spider_some_note(
                 notes=notes,
-                cookies_str=cookie,
                 base_path=paths,
                 save_choice=save_choice,
                 excel_name=excel_name,
                 proxies=proxies
-            )
+            ) or []
 
             # 输出完成信号，包含count
             output_json({
@@ -218,7 +227,6 @@ def main():
 
             note_list, api_success, api_msg = spider.spider_user_all_note(
                 user_url=user_url,
-                cookies_str=cookie,
                 base_path=paths,
                 save_choice=save_choice,
                 excel_name=excel_name,
@@ -238,7 +246,7 @@ def main():
                 "success": True,
                 "count": len(note_list),
                 "api_success": api_success,
-                "api_message": api_msg,
+                "api_message": str(api_msg) if api_msg is not None else None,
                 "message": "任务完成"
             })
 
@@ -264,7 +272,6 @@ def main():
             note_list, api_success, api_msg = spider.spider_some_search_note(
                 query=query,
                 require_num=require_num,
-                cookies_str=cookie,
                 base_path=paths,
                 save_choice=save_choice,
                 sort_type_choice=sort_type,
@@ -283,7 +290,7 @@ def main():
                 "success": True,
                 "count": len(note_list),
                 "api_success": api_success,
-                "api_message": api_msg,
+                "api_message": str(api_msg) if api_msg is not None else None,
                 "message": "任务完成"
             })
 

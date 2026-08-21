@@ -1,14 +1,20 @@
 import os
-import math
-import random
 import time
+import random
+import hashlib
+import binascii
+
 from loguru import logger
 from dotenv import load_dotenv
+
+_A1_CHARSET = 'abcdefghijklmnopqrstuvwxyz1234567890'
+
 
 def load_env():
     load_dotenv()
     cookies_str = os.getenv('COOKIES')
     return cookies_str
+
 
 def poisson_sleep(mean_ms: float = None):
     """
@@ -17,6 +23,7 @@ def poisson_sleep(mean_ms: float = None):
     :param mean_ms: 平均延迟（毫秒）。默认读取环境变量 REQUEST_DELAY_MS，回退到 1500ms。
                     设为 0 或负数时跳过等待（便于本地调试/关闭限速）。
     """
+    import math
     if mean_ms is None:
         try:
             mean_ms = float(os.getenv('REQUEST_DELAY_MS', 1500))
@@ -29,6 +36,8 @@ def poisson_sleep(mean_ms: float = None):
     # 限制上下界，避免极端短或极端长的等待
     delay = max(0.3, min(delay, mean_ms * 5 / 1000))
     time.sleep(delay)
+
+
 
 def init():
     media_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../datas/media_datas'))
@@ -43,3 +52,15 @@ def init():
         'excel': excel_base_path,
     }
     return cookies_str, base_path
+
+
+def generate_a1():
+    ts_hex = hex(int(time.time() * 1000))[2:]
+    random_str = ''.join(random.choices(_A1_CHARSET, k=30))
+    a_part = ts_hex + random_str + '5' + '0' + '000'
+    crc = binascii.crc32(a_part.encode()) & 0xFFFFFFFF
+    return (a_part + str(crc))[:52]
+
+
+def generate_web_id(a1):
+    return hashlib.md5(a1.encode()).hexdigest()
